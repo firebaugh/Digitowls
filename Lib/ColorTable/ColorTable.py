@@ -10,6 +10,18 @@ import cPickle as pickle
 import array
 import copy
 
+#TODO
+# - Convolve: this does not cluster properly, maybe working in 2d space? may don't consider black pixels?
+# - Click and drag, erase blue square
+# - Convoled image is never saved
+# - Should be done in C:
+#          * Convolve or clustering/filter
+#          * Find similar colors
+#          * 3D view of YUYV space
+#          * YUYV <--> RGB
+#          * Everything?
+
+# Dictionary of six possible colors 
 rgb_color = {}
 rgb_color[0] = (0, 0, 0)
 rgb_color[1] = (255, 140, 0) # orange
@@ -18,6 +30,7 @@ rgb_color[4] = (0, 255, 255) # cyan
 rgb_color[8] = (34, 139, 34) # green
 rgb_color[16] = (255, 255, 255) # white
 
+#BUG
 def vote(matrix, width, height, i):
     votes = {}
     count = {}
@@ -26,14 +39,20 @@ def vote(matrix, width, height, i):
             p = (i + x) + y * width
             col = p % width
             row = p // width
-            if 0 <= col < width and 0 <= row < height:
+            if 0 <= col < width and 0 <= row < height and matrix[p] != 0: #do not consider black
                 votes[matrix[p]] = votes.get(matrix[p], 0) + 1
-    m = max(votes.values())
-    if m > 4:
+    if len(votes.values()) != 0:
+        m = max(votes.values())
+    else:
+        return 0
+    if m > 0: #changed neighborhood from 4
         return votes.keys()[votes.values().index(m)]
     else:
         return 0
 
+# Smoothing out the yuyv space
+# BUG: As 2D, should be 3D space
+# BUG: Never saved
 def convolve(matrix, width, height):
     newmatrix = [0] * len(matrix)
     for i in range(len(matrix)):
@@ -85,6 +104,7 @@ class Colortable_Generator:
     def __init__(self, master):
         # This dictionary will hold all our image data
         self.backup = []
+        # Contains set of unique labeled RGB values
         self.color_dict = {}
         self.color_dict["orange"] = set([])
         self.color_dict["yellow"] = set([])
@@ -193,7 +213,7 @@ class Colortable_Generator:
         self.Radiobutton_3.place(x=12, y=156, width=136, height=26)
         self.Radiobutton_3.configure(variable=self.RadioGroup1_StringVar )
 
-        self.Radiobutton_4 = Radiobutton(self.master,text="Field (Green)", value="green", width="15")
+        self.Radiobutton_4 = Radiobutton(self.master,text="Green", value="green", width="15")
         self.Radiobutton_4.place(x=12, y=192, width=140, height=27)
         self.Radiobutton_4.configure(variable=self.RadioGroup1_StringVar )
 
